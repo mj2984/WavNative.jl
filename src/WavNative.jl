@@ -1,7 +1,6 @@
 module WavNative
-using ..SamplesCore
-using BitIntegers, FixedPointNumbers#SoundCore
-
+using SoundIO#SamplesCore
+using BitIntegers, FixedPointNumbers
 export WavMetadata, get_wav_layout, audioread
 
 struct WavMetadata{Bits, Channels}
