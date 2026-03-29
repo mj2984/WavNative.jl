@@ -1,0 +1,17 @@
+name = "WavNative"
+uuid = "a2d1c3e4-5b67-4d89-bc01-e23456789abc"
+authors = ["Manuel Jenkin Jerome <mj2984@columbia.edu>"]
+version = "0.1.0"
+description = "A Julia Native Wav file parser designed around SoundIO.jl ecosystem with fast performance and transparent processing"
+license = "MIT"
+
+[deps]
+BitIntegers = "c3b6d118-76ef-56ca-8cc7-ebb389d030a1"
+FixedPointNumbers = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
+SoundIO = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+[compat]
+julia = "1.8"
+BitIntegers = "0.3"
+FixedPointNumbers = "0.8"
+SoundIO = "0.1.3"
