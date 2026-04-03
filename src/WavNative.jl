@@ -71,7 +71,7 @@ function base_wav_parser(Input::WavMemoryInput, meta::WavMetadata{Bits, Channels
     else
         Input, pointer(Input), false
     end
-    TargetType = Channels == 1 ? T : Sample{Channels, T}
+    TargetType = Sample{Channels, T}
     n_frames = meta.data_size ÷ (Channels * (Bits ÷ 8))
 
     if Bits != 24 && sizeof(T) * 8 == Bits # FAST PATH: Zero-copy
@@ -129,19 +129,19 @@ end
     return reinterpret(Int32, u32) % ET
 end
 
-function _process_bits!(dest::AbstractVector{T}, raw::Vector{UInt8}, meta::WavMetadata{nbits, nchans}) where {T, nbits, nchans}
-    ET = T <: Sample ? eltype(T) : T
+function _process_bits!(dest::AbstractVector{Sample{nchans, T}}, raw::Vector{UInt8}, meta::WavMetadata{nbits, nchans}) where {nchans, T, nbits}
     GC.@preserve raw begin
         base_ptr = pointer(raw) + meta.data_offset - 1
-        bps, bpf = nbits ÷ 8, nchans * (nbits ÷ 8)
+        bps = nbits ÷ 8
+        bpf = nchans * bps
         f_tag = meta.format_tag
-        @inbounds for frame_idx in 1:length(dest)
-            frame_ptr = base_ptr + (frame_idx - 1) * bpf
-            samples_tuple = ntuple(Val(nchans)) do ch_idx
-                sample_ptr = frame_ptr + (ch_idx - 1) * bps
-                return _read_pcm_sample(sample_ptr, Val(nbits), ET, f_tag)
-            end
-            dest[frame_idx] = T <: Sample ? T(samples_tuple...) : samples_tuple[1]
+        @inbounds for i in eachindex(dest)
+            frame_ptr = base_ptr + (i - 1) * bpf
+            # Inline the ntuple creation for better performance and readability
+            dest[i] = Sample{nchans, T}(ntuple(ch -> 
+                _read_pcm_sample(frame_ptr + (ch - 1) * bps, Val(nbits), T, f_tag), 
+                Val(nchans))
+            )
         end
     end
     return dest
