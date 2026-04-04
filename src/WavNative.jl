@@ -38,9 +38,9 @@ function get_layout_wav(data::AbstractVector{UInt8})
     fmt_tag::UInt16, Channels::UInt16, rate::UInt32, Bits::UInt16, data_offset::Int64, total_frames::Int64 = 0, 0, 0, 0, 0, 0
     pos_offset::Int = 12
     while pos_offset + 8 < length(data)
-        chunk_id = (data[pos_offset+1], data[pos_offset+2], data[pos_offset+3], data[pos_offset+4])
-        sz = UInt32(data[pos_offset+5]) | (UInt32(data[pos_offset+6]) << 8) | (UInt32(data[pos_offset+7]) << 16) | (UInt32(data[pos_offset+8]) << 24)
-        chunk_data = pos_offset + 8
+        chunk_id::NTuple{4,UInt8} = (data[pos_offset+1], data[pos_offset+2], data[pos_offset+3], data[pos_offset+4])
+        sz::UInt32 = UInt32(data[pos_offset+5]) | (UInt32(data[pos_offset+6]) << 8) | (UInt32(data[pos_offset+7]) << 16) | (UInt32(data[pos_offset+8]) << 24)
+        chunk_data::Int = pos_offset + 8
         if chunk_id === FMT_ID
             fmt_tag  = UInt16(data[chunk_data+1]) | (UInt16(data[chunk_data+2]) << 8)
             Channels = (UInt16(data[chunk_data+3]) | (UInt16(data[chunk_data+4]) << 8))
