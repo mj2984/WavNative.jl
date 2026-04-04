@@ -8,18 +8,7 @@ struct WavMetadata{T, Channels}
     total_frames::Int
 end
 
-@inline function get_transport_type(::Type{T}) where {T}
-    if T === Q0f15
-        return Int16
-    elseif T === Q0f23
-        return Int32
-    elseif T === Q0f31
-        return Int32
-    else
-        return T
-    end
-end
-
+@inline get_transport_type(::Type{T}) where {T} = T === Q0f23 ? Q0f31 : T
 const WavMemoryInput = Union{Vector{UInt8},Tuple{Vector{UInt8},Ptr{Cvoid}}}
 
 const RIFF_ID = (UInt8('R'), UInt8('I'), UInt8('F'), UInt8('F'))
