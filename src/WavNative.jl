@@ -85,14 +85,14 @@ function base_wav_parser(Input::WavMemoryInput, meta::WavMetadata{S, Channels}, 
         if ismalloc
             finalizer(x -> Libc.free(raw_ptr), final_view)
         end
-        return SampleArray(final_view, (meta.sample_rate,))
+        return DomainArray(final_view, (meta.sample_rate,))
     else # PROCESS PATH: Copy/Convert
         dest = Vector{TargetType}(undef, n_frames)
         _process_bits!(dest, data, meta)
         if ismalloc
             Libc.free(raw_ptr)
         end
-        return SampleArray(dest, (meta.sample_rate,))
+        return DomainArray(dest, (meta.sample_rate,))
     end
 end
 
