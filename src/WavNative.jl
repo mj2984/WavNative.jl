@@ -85,14 +85,14 @@ function base_wav_parser(Input::WavMemoryInput, meta::WavMetadata{S, Channels}, 
         if ismalloc
             finalizer(x -> Libc.free(raw_ptr), final_view)
         end
-        return final_view, meta.sample_rate
+        return SampleArray(final_view, (meta.sample_rate,))
     else # PROCESS PATH: Copy/Convert
         dest = Vector{TargetType}(undef, n_frames)
         _process_bits!(dest, data, meta)
         if ismalloc
             Libc.free(raw_ptr)
         end
-        return dest, meta.sample_rate
+        return SampleArray(dest, (meta.sample_rate,))
     end
 end
 
@@ -140,10 +140,10 @@ end
 end
 
 function _process_bits!(dest::AbstractVector{Sample{Channels, T}}, raw::Vector{UInt8}, meta::WavMetadata{S, Channels}) where {Channels, T, S}
+    bytes_per_sample::Int = S === Q0f23 ? 3 : sizeof(S)
+    bytes_per_frame::Int = Channels * bytes_per_sample
     GC.@preserve raw begin
         base_ptr = pointer(raw) + meta.data_offset
-        bytes_per_sample::Int = S === Q0f23 ? 3 : sizeof(S)
-        bytes_per_frame::Int = Channels * bytes_per_sample
         @inbounds for i in eachindex(dest)
             frame_ptr = base_ptr + (i - 1) * bytes_per_frame
             dest[i] = Sample{Channels, T}(ntuple(ch -> 
