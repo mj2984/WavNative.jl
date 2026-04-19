@@ -2,8 +2,8 @@ module WavNative
 using BitIntegers, FixedPointNumbers, SamplesCore
 export WavMetadata, get_wav_layout, audioread
 
-struct WavMetadata{T, Channels}
-    sample_rate::Int
+struct WavMetadata{T, Channels, AxisType<:DomainAxis}
+    axis::AxisType
     data_offset::Int
     total_frames::Int
 end
@@ -55,7 +55,8 @@ function get_layout_wav(data::AbstractVector{UInt8})
         pos_offset = chunk_data + sz + (sz % 2)
     end
     Dtype = fmt_tag == UInt16(3) ? (Bits == 32 ? Float32 : Float64) : Bits == 16 ? Q0f15 : (Bits == 24 ? Q0f23 : Q0f31)
-    return WavMetadata{Dtype, Int(Channels)}(Int(rate), data_offset, total_frames)
+    axis = DomainAxis(relativeorigin,TypedDomainSpace{rate}())
+    return WavMetadata{Dtype, Int(Channels), typeof(axis)}(axis, data_offset, total_frames)
 end
 
 function get_layout_wav(path::String)
@@ -85,14 +86,14 @@ function base_wav_parser(Input::WavMemoryInput, meta::WavMetadata{S, Channels}, 
         if ismalloc
             finalizer(x -> Libc.free(raw_ptr), final_view)
         end
-        return DomainArray(final_view, (meta.sample_rate,))
+        return DomainArray(final_view, (meta.axis,))
     else # PROCESS PATH: Copy/Convert
         dest = Vector{TargetType}(undef, n_frames)
         _process_bits!(dest, data, meta)
         if ismalloc
             Libc.free(raw_ptr)
         end
-        return DomainArray(dest, (meta.sample_rate,))
+        return DomainArray(dest, (meta.axis,))
     end
 end
 
